@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-from demo_backend import build_om_category_candidates, build_om_zone_candidates, build_zone_recommendation_stats, dashboard_campaigns, load_demo_data
+from demo_backend import build_om_zone_candidates, build_zone_recommendation_stats, dashboard_campaigns, load_demo_data
 
 
 st.set_page_config(
@@ -55,7 +55,6 @@ def payload() -> dict:
             "output_zone_utilization.csv": int(len(utilization)),
         },
         "omRecommendationSource": "precomputed Model 1 output_zone_forecasts.csv + pipeline_OM.py Phase 3 zone scoring",
-        "omCategoryCandidates": build_om_category_candidates(),
         "omZoneCandidates": build_om_zone_candidates(),
         "zoneStats": build_zone_recommendation_stats(forecasts, utilization, allocations),
         "fleetMetrics": fleet_metrics,
@@ -1264,7 +1263,7 @@ function campaignStepTwoA() {
 
 function campaignStepTwoB() {
   const d = state.draftCampaign;
-  const candidateZones = DATA.omCategoryCandidates || [];
+  const candidateZones = (DATA.omZoneCandidates || []).slice(0, 12);
   const selectedZones = d.zones || candidateZones.slice(0, 5).map(row => row.zone_name);
   const rows = candidateZones.map(stat => `
     <tr>
@@ -1279,9 +1278,9 @@ function campaignStepTwoB() {
   `).join("");
   return `
     <div class="panel form-panel">
-      <div class="panel-head">Zone Identification</div>
-      <table class="table"><thead><tr><th></th><th>Zone Category</th><th>Forecast Capacity / Day</th><th>Available / Day</th><th>Active Campaigns</th><th>ZPR</th><th>OM Score</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="unit-note" style="padding:8px 20px;">Categories are Movies, TV, Audio, Games, and Retail. Each category is aggregated from backend zone forecasts and scored with the pipeline_OM Phase 3 logic.</div>
+      <div class="panel-head">Zone Identification from pipeline_OM.py</div>
+      <table class="table"><thead><tr><th></th><th>Zone Name</th><th>Forecast Capacity / Day</th><th>Available / Day</th><th>Active Campaigns</th><th>ZPR</th><th>OM Score</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="unit-note" style="padding:8px 20px;">Zone options come from precomputed Model 1 capacity forecasts and pipeline_OM.py Phase 3 scoring logic.</div>
       <div class="action-row"><button class="primary" onclick="saveCampaignStep(2)">Back</button><button class="primary" onclick="saveCampaignStep(4)" style="margin-left:8px;">Save & Continue</button></div>
     </div>
   `;
@@ -1870,7 +1869,7 @@ function exportsPage() {
 }
 
 function recommend(campaign) {
-  const candidates = DATA.omCategoryCandidates || [];
+  const candidates = DATA.omZoneCandidates || [];
   const dailyNeed = dailyTarget(campaign);
   const selectedNames = new Set(campaign.zones || []);
   const targetAvailable = dailyNeed * 1.2;
@@ -1898,7 +1897,7 @@ function recommend(campaign) {
       forecastRows: 1,
       zpr: Number(row.zpr || 0),
       score,
-      reason: `${row.reason || "Backend-derived category recommendation."} Aggregated from ${money(row.source_zone_count || 0)} backend zones using pipeline_OM score inputs. Available/day: ${money(available)}; ZPR: ${Number(row.zpr || 0).toFixed(2)}.`
+      reason: `pipeline_OM score uses Model 1 capacity, active campaign competition, available capacity, and capped ZPR. Available/day: ${money(available)}; ZPR: ${Number(row.zpr || 0).toFixed(2)}.`
     });
     if (rows.length >= 5 && cumulative >= targetAvailable) break;
   }

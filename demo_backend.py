@@ -165,47 +165,6 @@ def build_om_zone_candidates() -> list[dict]:
     return sorted(rows, key=lambda row: row["score"], reverse=True)
 
 
-@lru_cache(maxsize=1)
-def build_om_category_candidates() -> list[dict]:
-    """Aggregate OM-scored concrete zones back into the five UI zone categories."""
-    zone_candidates = build_om_zone_candidates()
-    category_rows = []
-
-    for category, config in ZONE_ENGINE_GROUPS.items():
-        keywords = config["keywords"]
-        matches = [
-            row for row in zone_candidates
-            if any(keyword in row["zone_name"].lower() for keyword in keywords)
-        ]
-        if not matches:
-            matches = zone_candidates[:12]
-
-        daily_capacity = sum(float(row["daily_capacity"]) for row in matches)
-        available_capacity = sum(float(row["available_capacity"]) for row in matches)
-        active_campaigns = sum(int(row["active_campaigns"]) for row in matches)
-        score = sum(float(row["score"]) for row in matches)
-        weighted_zpr = (
-            sum(float(row["zpr"]) * float(row["available_capacity"]) for row in matches)
-            / max(available_capacity, 1.0)
-        )
-
-        category_rows.append(
-            {
-                "zone_name": category,
-                "daily_capacity": round(daily_capacity),
-                "active_campaigns": active_campaigns,
-                "available_capacity": round(available_capacity),
-                "zpr": round(weighted_zpr, 3),
-                "category": category.lower(),
-                "score": round(score, 2),
-                "source_zone_count": len(matches),
-                "reason": config["reason"],
-            }
-        )
-
-    return sorted(category_rows, key=lambda row: row["score"], reverse=True)
-
-
 def build_zone_recommendation_stats(
     forecasts: pd.DataFrame,
     utilization: pd.DataFrame,
