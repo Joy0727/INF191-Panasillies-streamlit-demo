@@ -964,7 +964,9 @@ function escapeHtml(value) {
 
 function isTestCampaignName(name) {
   const normalized = String(name || "").trim();
-  return /^xxxx\d*$/i.test(normalized) || /^illy 2026 demo campaign$/i.test(normalized);
+  return /^xxxx\d*$/i.test(normalized)
+    || /^illy 2026 demo campaign$/i.test(normalized)
+    || /^panasillies test campaign$/i.test(normalized);
 }
 
 function formatDate(isoDate) {
