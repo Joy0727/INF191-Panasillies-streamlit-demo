@@ -8,10 +8,16 @@ This repository intentionally does not include backend data files or model artif
 
 ```bash
 pip install -r requirements.txt
-PANASILLIES_DATA_DIR=/Users/yunxiwang/Desktop/INF191-Panasillies python3 run.py
+PANASILLIES_DATA_DIR=<path-to-backend-data-folder> python3 run.py
 ```
 
 Then open the URL shown by Streamlit.
+
+Example:
+
+```bash
+PANASILLIES_DATA_DIR=../INF191-Panasillies python3 run.py
+```
 
 Demo login:
 
